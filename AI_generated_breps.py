@@ -84,7 +84,6 @@ else:
     print("Script execution is skipped as run_code is set to False.")
 
 
-
 def import_step_file(step_file_path):
     """
     Import a STEP file into Rhino and return a list of object IDs.
@@ -135,12 +134,12 @@ def import_step_file(step_file_path):
     
     print(f"Found {len(imported_objects)} objects in the document.")
 
-    # Hide the imported objects
+    # Delete the imported objects
     for obj in imported_objects:
-        obj.Attributes.Visible = False
-        obj.CommitChanges()  # Commit the visibility change
+        Rhino.RhinoDoc.ActiveDoc.Objects.Delete(obj, True)  # Delete the object and commit changes
 
     return imported_objects
+
 
 def get_breps_from_objects(object_list):
     """
@@ -217,4 +216,3 @@ else:
 
 # Move and rename the STEP file
 move_and_rename_file(step_file_path)
-

@@ -1,0 +1,32 @@
+{
+  "id": "89e0bcb0-4c9d-4fb1-a32b-fd79925d2fcb",
+  "identity": {
+    "name": "AI_Generative_3D_GH",
+    "version": "0.1-beta",
+    "publisher": {
+      "email": "jmuozan@gmail.com",
+      "name": "Jorge Mu\u00F1oz Zan\u00F3n",
+      "country": "Spain",
+      "url": "https://jmuozan.github.io/jorgemunyozz.github.io/"
+    },
+    "description": "Generate AI 3D models text to CAD with ZOO\u0027s API. Also Image to CAD",
+    "copyright": "Copyright \u00A9 2024 Jorge Mu\u00F1oz Zan\u00F3n",
+    "license": "MIT",
+    "url": "https://jmuozan.github.io/jorgemunyozz.github.io/"
+  },
+  "settings": {
+    "buildPath": "build/",
+    "buildTarget": {
+      "appName": "Rhino3D",
+      "appVersion": {
+        "major": 8
+      },
+      "title": "Rhino3D (8.*)",
+      "slug": "rh8"
+    },
+    "publishTarget": {
+      "title": "McNeel Yak Server"
+    }
+  },
+  "codes": []
+}
