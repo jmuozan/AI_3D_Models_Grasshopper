@@ -1,8 +1,6 @@
 from openai import OpenAI
 import base64
 
-# r: openai
-
 def encode_image(image_path):
     with open(image_path, 'rb') as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
@@ -11,7 +9,6 @@ api_key = x
 image_path = y
 
 client = OpenAI(api_key=api_key)
-
 base64_image = encode_image(image_path)
 
 response = client.chat.completions.create(
@@ -41,4 +38,3 @@ response = client.chat.completions.create(
 # print('Total Tokens:', response.usage.total_tokens)
 
 a = response.choices[0].message.content
-print(a)
