@@ -5,18 +5,15 @@ import Rhino
 import shutil
 import scriptcontext as sc
 from datetime import datetime
-
 from kittycad.api.ai import create_text_to_cad, get_text_to_cad_model_for_user
 from kittycad.client import Client
 from kittycad.models.api_call_status import ApiCallStatus
 from kittycad.models.file_export_format import FileExportFormat
 from kittycad.models.text_to_cad_create_body import TextToCadCreateBody
 
-# API key
 API_KEY = api
 client = Client(token=API_KEY)
 
-# Output directory
 output_dir = path
 
 # Ensure directory exists
@@ -29,7 +26,6 @@ a = 2  # Change this value to 1, 2, or 3 to get .stl, .step, or .obj. Better lea
 run_code = generate 
 
 if run_code:
-    # Determine the output format based on 'a'
     if a == 1:
         output_format = FileExportFormat.STL
         file_extension = "stl"
@@ -90,7 +86,6 @@ def import_step_file(step_file_path):
         print("File does not exist:", step_file_path)
         return []
 
-    # Import step file
     rs.Command(f"_-Import \"{step_file_path}\" _Enter", False)
 
     # Delay
