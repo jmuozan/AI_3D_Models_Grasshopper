@@ -1,0 +1,17 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{58e29195-cc45-4a0d-b4e4-ca7163fa9660}") = "AI Tools.GH", "AI Tools.GH\AI Tools.GH.csproj", "{2178f54a-535f-4240-9572-f87140885455}"
+EndProject
+
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2178f54a-535f-4240-9572-f87140885455}.Debug|Any CPU.Build.0 = Debug|Any CPU
+{2178f54a-535f-4240-9572-f87140885455}.Release|Any CPU.Build.0 = Release|Any CPU
+
+	EndGlobalSection
+EndGlobal

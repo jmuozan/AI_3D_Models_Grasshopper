@@ -1,0 +1,10 @@
+---
+name: AI Tools
+version: 0.1.22353.9010
+authors:
+- Jorge Muñoz Zanón
+description: AI generated Breps inside Grasshopper
+license: MIT
+url: https://github.com/jmuozan/AI_3D_Models_Grasshopper
+keywords:
+- guid:58e29195-cc45-4a0d-b4e4-ca7163fa9660

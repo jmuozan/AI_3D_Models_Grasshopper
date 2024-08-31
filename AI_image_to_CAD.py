@@ -1,6 +1,8 @@
 from openai import OpenAI
 import base64
 
+# r: openai
+
 def encode_image(image_path):
     with open(image_path, 'rb') as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
@@ -20,7 +22,7 @@ response = client.chat.completions.create(
             'content': [
                 {
                     'type': 'text',
-                    'text': 'Describe an object that can be modeled in CAD with simple operations, being as explicit as possible, using meassures if possible and focusing on single, self-contained items rather than assemblies. Maximum length 15 words.'
+                    'text': 'Describe an object that can be modeled in CAD with simple operations, being as explicit as possible, using meassures if possible and focusing on single, self-contained items rather than assemblies. Try to make descriptions as operations in a cad software. Try not to build super long prompts.'
                 },
                 {
                     'type': 'image_url',
