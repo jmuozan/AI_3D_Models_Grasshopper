@@ -18,9 +18,7 @@ output_dir = path
 
 # Ensure directory exists
 os.makedirs(output_dir, exist_ok=True)
-
-# 'a' to determine the output format (Delete this option when I have time)
-a = 2  # Change this value to 1, 2, or 3 to get .stl, .step, or .obj. Better leave it as step. it has way better topology
+a = 2  # 'a' to determine the output format (Delete this option when I have time). Change this value to 1, 2, or 3 to get .stl, .step, or .obj. Better leave it as step. it has way better topology
 
 # 'run_code' controls whether the script should run or not
 run_code = generate 
@@ -135,7 +133,6 @@ def get_breps_from_objects(object_list):
 def move_and_rename_file(step_file_path):
     main_directory = os.path.dirname(step_file_path)
 
-    # Define the 'MODELS' folder 
     models_folder = os.path.join(main_directory, "MODELS")
 
     # Check if the 'MODELS' folder exists, if not, create
@@ -147,20 +144,15 @@ def move_and_rename_file(step_file_path):
     existing_files = [f for f in os.listdir(models_folder) if f.endswith('.step') or f.endswith('.stp')]
     model_number = len(existing_files) + 1
 
-    # Date and time
     current_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
-
-    # New file name
     file_name = f"model-{model_number}_{current_time}.step"
 
-    # Destination path
     destination_path = os.path.join(models_folder, file_name)
 
     # Move and rename
     shutil.move(step_file_path, destination_path)
     print(f"Moved and renamed file to: {destination_path}")
 
-# Path tofile from input
 step_file_path = output_file_path
 
 # Import the file
