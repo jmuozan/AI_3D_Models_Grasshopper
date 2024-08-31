@@ -33,8 +33,4 @@ response = client.chat.completions.create(
     max_tokens=300,
 )
 
-# print('Completion Tokens:', response.usage.completion_tokens)
-# print('Prompt Tokens:', response.usage.prompt_tokens)
-# print('Total Tokens:', response.usage.total_tokens)
-
 a = response.choices[0].message.content
