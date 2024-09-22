@@ -1,4 +1,9 @@
 # AI_3D_Models_Grasshopper
+
+Upcoming documentation of how to set it up!!!
+
+https://youtu.be/unV0LstCBbw?si=JickyTuXO-yhUQ9I
+
 Generate AI 3D models inside Grasshopper for Rhino 8
 
 
