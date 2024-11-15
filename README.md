@@ -2,7 +2,9 @@
 
 Plug-In developed by [**Jorge Muñoz Zanón**](https://jmuozan.github.io/jorgemunyozz.github.io/)
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/unV0LstCBbw?si=jJW_XyRRbBE60GIH" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+[![AI_3D_Models_Grasshopper](https://img.youtube.com/vi/zaSHL5S3cfa8WwwG/0.jpg)](https://www.youtube.com/watch?v=zaSHL5S3cfa8WwwG)
+
+
 
 **https://youtu.be/unV0LstCBbw?si=zaSHL5S3cfa8WwwG**
 
@@ -20,7 +22,7 @@ To be able to use AI Tools you will need:
 
 3. [OpenAI API](https://openai.com/api/) keys. Register on OpenAI go to your profile/billing and add money to the wallet ***IMPORTANT: Even if you pay for GPT Plus you will need to pay for tokens, is not the same.**
 
-4. ```AI_Tools.Components.gha``` file you will find in this repo. Or [Food4Rhino](https://www.food4rhino.com/en)
+4. ```AI_Tools.Components.gha``` file you will find in this repo. Or [Food4Rhino](https://www.food4rhino.com/en/app/ai-tools?lang=en)
 
 5. Optionally you can have a look at the example files available in this repository to play around and see how to set up.
 
@@ -34,9 +36,11 @@ The main file to make it work on your Rhino/Grasshopper is the ```.gha``` file u
 
 With this file you should:
 
+![](./IMGS/DOCUMENTATION/gha.png)
+
 1. Open Rhino on your computer.
 
-![](./IMGS/DOCUMENTATION/gha.png)
+![](./IMGS/DOCUMENTATION/1.png)
 
 2. Type Grasshopper on the command line or click on the icon
 
