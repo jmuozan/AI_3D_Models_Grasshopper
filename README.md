@@ -30,6 +30,9 @@ For sure!!!! This is an open source project. As my background has never been cod
 ## How to install it?
 
 The main file to make it work on your Rhino/Grasshopper is the ```.gha``` file under ```build/rh8/AI_Tools.Components.gha```
+This file can also be downloaded from [Food4Rhino](https://www.food4rhino.com/en/app/ai-tools?lang=en) just clicking download.
+![](./IMGS/DOCUMENTATION/F4R.png)
+
 
 With this file you should:
 
