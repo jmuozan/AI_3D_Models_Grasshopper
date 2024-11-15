@@ -2,11 +2,8 @@
 
 Plug-In developed by [**Jorge Muñoz Zanón**](https://jmuozan.github.io/jorgemunyozz.github.io/)
 
-[![AI_3D_Models_Grasshopper](https://img.youtube.com/vi/zaSHL5S3cfa8WwwG/0.jpg)](https://www.youtube.com/watch?v=zaSHL5S3cfa8WwwG)
+[**VIDEO**](https://youtu.be/unV0LstCBbw?si=zaSHL5S3cfa8WwwG)
 
-
-
-**https://youtu.be/unV0LstCBbw?si=zaSHL5S3cfa8WwwG**
 
 ## The project
 
