@@ -1,6 +1,6 @@
 # AI Tools Plug-In
 
-Plug-In developed by [**Jorge Muñoz Zanón**](https://www.linkedin.com/in/jorgemunozzanon/)
+Plug-In developed by [**Jorge Muñoz Zanón**](https://www.linkedin.com/in/jorgemunozzanon/) 
 
 [**VIDEO**](https://youtu.be/unV0LstCBbw?si=zaSHL5S3cfa8WwwG)
 
