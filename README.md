@@ -137,3 +137,10 @@ As mentioned before, this is an open source project so it's completely open for 
 
 Also, ```Test_File_AI_Tools.gh``` is a perfect example of how to set up the scripts and has a simple application of how the tool can be used. 
 
+
+
+Some ideas I've been having for future versions of the plug-in. If you want to add a specific tool for your workflow please tell me and I can add it to the list.
+
+- [ ] Iteration process
+- [ ] Change prompt generation from vision tool
+- [ ] Piece modification????

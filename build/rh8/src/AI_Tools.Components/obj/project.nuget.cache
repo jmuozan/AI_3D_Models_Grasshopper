@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "49EXYx0xUMuces4Xh96tqtLqmsOQQZukLmN3vTigdrKxkbdWcx8W54GRkGuo1EQNCoMigTrAIMubWzaWe4gyWA==",
+  "success": true,
+  "projectFilePath": "/Users/jorgemuyo/Desktop/GH_AI_3D/build/rh8/src/AI_Tools.Components/AI_Tools.Components.csproj",
+  "expectedPackageFiles": [
+    "/Users/jorgemuyo/.nuget/packages/grasshopper/8.14.24345.15001/grasshopper.8.14.24345.15001.nupkg.sha512",
+    "/Users/jorgemuyo/.nuget/packages/microsoft.csharp/4.7.0/microsoft.csharp.4.7.0.nupkg.sha512",
+    "/Users/jorgemuyo/.nuget/packages/microsoft.netframework.referenceassemblies/1.0.3/microsoft.netframework.referenceassemblies.1.0.3.nupkg.sha512",
+    "/Users/jorgemuyo/.nuget/packages/microsoft.netframework.referenceassemblies.net48/1.0.3/microsoft.netframework.referenceassemblies.net48.1.0.3.nupkg.sha512",
+    "/Users/jorgemuyo/.nuget/packages/rhinocommon/8.14.24345.15001/rhinocommon.8.14.24345.15001.nupkg.sha512"
+  ],
+  "logs": []
+}
