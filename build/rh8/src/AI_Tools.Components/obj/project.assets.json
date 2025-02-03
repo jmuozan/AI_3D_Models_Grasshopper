@@ -2,10 +2,10 @@
   "version": 3,
   "targets": {
     ".NETFramework,Version=v4.8": {
-      "Grasshopper/8.14.24345.15001": {
+      "Grasshopper/8.15.25019.13001": {
         "type": "package",
         "dependencies": {
-          "RhinoCommon": "[8.14.24345.15001]"
+          "RhinoCommon": "[8.15.25019.13001]"
         },
         "compile": {
           "lib/net48/GH_IO.dll": {
@@ -51,7 +51,7 @@
           "build/Microsoft.NETFramework.ReferenceAssemblies.net48.targets": {}
         }
       },
-      "RhinoCommon/8.14.24345.15001": {
+      "RhinoCommon/8.15.25019.13001": {
         "type": "package",
         "compile": {
           "lib/net48/Ed.Eto.dll": {
@@ -84,15 +84,15 @@
     }
   },
   "libraries": {
-    "Grasshopper/8.14.24345.15001": {
-      "sha512": "fxTa5DoPFpXNy3Tf7XgcAh+Hm9Ol/2auo5DR3LxlfkoqTJOCnrIfUY7ZwM7/LXLQnGTDVyFfXIsndPGNw3kx+Q==",
+    "Grasshopper/8.15.25019.13001": {
+      "sha512": "2vE3uH0TybY4F0XYIQ7/0gZifVVUpdlDH6FMp/XV/AP2E81ap22ThWc1nvHOveehmYnMPzJDyrYUP54lr2lqLg==",
       "type": "package",
-      "path": "grasshopper/8.14.24345.15001",
+      "path": "grasshopper/8.15.25019.13001",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "build/net48/Grasshopper.targets",
-        "grasshopper.8.14.24345.15001.nupkg.sha512",
+        "grasshopper.8.15.25019.13001.nupkg.sha512",
         "grasshopper.nuspec",
         "grasshopper.png",
         "lib/net48/GH_IO.dll",
@@ -561,10 +561,10 @@
         "microsoft.netframework.referenceassemblies.net48.nuspec"
       ]
     },
-    "RhinoCommon/8.14.24345.15001": {
-      "sha512": "wzqmkQz9DnkzVaF2oZISyAJVaLIfNfRVOvgkGr8ge/c98quYC8FnOu+G/HCsYS4z5UacoBzCEoPbqDtoQKPG1Q==",
+    "RhinoCommon/8.15.25019.13001": {
+      "sha512": "ktT6w5hqZqaMqC9i1DvQlx0jW0D8SlX673OPeO9Rh179vnxW+yw3DZcwM9fDiVLP6+faRMXe5iTYnMVk/sxrGw==",
       "type": "package",
-      "path": "rhinocommon/8.14.24345.15001",
+      "path": "rhinocommon/8.15.25019.13001",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -577,7 +577,7 @@
         "lib/net48/Rhino.UI.dll",
         "lib/net48/RhinoCommon.dll",
         "lib/net48/RhinoCommon.xml",
-        "rhinocommon.8.14.24345.15001.nupkg.sha512",
+        "rhinocommon.8.15.25019.13001.nupkg.sha512",
         "rhinocommon.nuspec",
         "rhinocommon.png"
       ]
@@ -611,6 +611,7 @@
         "net48"
       ],
       "sources": {
+        "/opt/homebrew/Cellar/dotnet/9.0.101/libexec/library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -623,7 +624,13 @@
         "warnAsError": [
           "NU1605"
         ]
-      }
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
       "net48": {
@@ -653,7 +660,7 @@
             "version": "[8.*, )"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/7.0.317/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/opt/homebrew/Cellar/dotnet/9.0.101/libexec/sdk/9.0.101/RuntimeIdentifierGraph.json"
       }
     }
   }
