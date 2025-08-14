@@ -155,4 +155,4 @@ Some ideas I've been having for future versions of the plug-in. If you want to a
 - [ ] Piece modification????
 
 
-[![Star History Chart](https://app.repohistory.com/api/svg?repo=AI_3D_Models_Grasshopper/repohistory&background=0D1117&color=62C3F8)](https://app.repohistory.com/star-history)
+[![Star History Chart](https://app.repohistory.com/api/svg?repo=jmuozan/AI_3D_Models_Grasshopper&type=Timeline&background=0D1117&color=62f888)](https://app.repohistory.com/star-history)
