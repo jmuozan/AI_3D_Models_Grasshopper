@@ -8,7 +8,7 @@
       "args": [
         "build",
         "-clp:NoSummary",
-        "${workspaceFolder}/AI_3D_Models_Grasshopper.csproj"
+        "${workspaceFolder}/AI_Tools.csproj"
       ],
       "problemMatcher": "$msCompile",
       "presentation": {
