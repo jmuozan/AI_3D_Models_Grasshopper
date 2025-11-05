@@ -1,0 +1,6 @@
+/Users/jorgemuyo/Desktop/AI_3D_Models_Grasshopper/obj/Debug/net7.0/AI_3D_Models_Grasshopper.csproj.AssemblyReference.cache
+/Users/jorgemuyo/Desktop/AI_3D_Models_Grasshopper/obj/Debug/net7.0/AI_3D_Models_Grasshopper.GeneratedMSBuildEditorConfig.editorconfig
+/Users/jorgemuyo/Desktop/AI_3D_Models_Grasshopper/obj/Debug/net7.0/AI_3D_Models_Grasshopper.AssemblyInfoInputs.cache
+/Users/jorgemuyo/Desktop/AI_3D_Models_Grasshopper/obj/Debug/net7.0/AI_3D_Models_Grasshopper.AssemblyInfo.cs
+/Users/jorgemuyo/Desktop/AI_3D_Models_Grasshopper/obj/Debug/net7.0/AI_3D_Models_Grasshopper.csproj.CoreCompileInputs.cache
+/Users/jorgemuyo/Desktop/AI_3D_Models_Grasshopper/obj/Debug/net7.0/AI_3D_Models_Grasshopper.sourcelink.json
