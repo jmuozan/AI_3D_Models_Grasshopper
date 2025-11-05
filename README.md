@@ -2,9 +2,6 @@
 
 Plug-In developed by [**Jorge Muñoz Zanón**](https://www.linkedin.com/in/jorgemunozzanon/) 
 
-<!--[**VIDEO**](https://youtu.be/unV0LstCBbw?si=zaSHL5S3cfa8WwwG)-->
-
-
 <div align="center">
   <a href="https://youtu.be/unV0LstCBbw?si=zaSHL5S3cfa8WwwG">
     <img src="./IMGS/Youtube_Image.png" alt="Watch the video" style="width:100%; margin:0 auto;" />
@@ -15,7 +12,7 @@ Plug-In developed by [**Jorge Muñoz Zanón**](https://www.linkedin.com/in/jorge
 
 ## The project
 
-With my goal of trying to democratize design and manufacturing processes I developed this plug-in allowing users to apply AI modeling tools in their grasshopper/design workflows. In this first version the plug-in has two components. On one side a text-to-CAD component that allows users to generate objects based on a text prompt using [ZOO's]( https://zoo.dev/) text-to-CAD model. On the other hand I developed another component called Image-to-Prompt. This component will generate a detailed step by step prompt based on an image stored locally on your computer. Feeding this text to the previously mentioned text-to-CAD component will generate this model. This second component has been developed using [OpenAI's](https://openai.com/api/) vision tool. 
+With my goal of trying to democratize design and manufacturing processes I developed this plug-in allowing users to apply AI modeling tools in their grasshopper/design workflows. In this first version the plug-in has two components. On one side a text-to-CAD component that allows users to generate objects based on a text prompt using [ZOO's](https://zoo.dev/) text-to-CAD model. On the other hand I developed another component called Image-to-Prompt. This component will generate a detailed step by step prompt based on an image stored locally on your computer. Feeding this text to the previously mentioned text-to-CAD component will generate this model. This second component has been developed using [OpenAI's](https://openai.com/api/) vision tool. 
 
 ## What do I need to be able use it?
 
