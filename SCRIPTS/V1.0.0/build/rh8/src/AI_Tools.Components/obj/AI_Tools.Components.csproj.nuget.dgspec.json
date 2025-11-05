@@ -1,0 +1,77 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/jorgemuyo/Desktop/GH_AI_3D/build/rh8/src/AI_Tools.Components/AI_Tools.Components.csproj": {}
+  },
+  "projects": {
+    "/Users/jorgemuyo/Desktop/GH_AI_3D/build/rh8/src/AI_Tools.Components/AI_Tools.Components.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/jorgemuyo/Desktop/GH_AI_3D/build/rh8/src/AI_Tools.Components/AI_Tools.Components.csproj",
+        "projectName": "AI_Tools.Components",
+        "projectPath": "/Users/jorgemuyo/Desktop/GH_AI_3D/build/rh8/src/AI_Tools.Components/AI_Tools.Components.csproj",
+        "packagesPath": "/Users/jorgemuyo/.nuget/packages/",
+        "outputPath": "/Users/jorgemuyo/Desktop/GH_AI_3D/build/rh8/src/AI_Tools.Components/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/jorgemuyo/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net48"
+        ],
+        "sources": {
+          "/opt/homebrew/Cellar/dotnet/9.0.101/libexec/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net48": {
+            "targetAlias": "net48",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.100"
+      },
+      "frameworks": {
+        "net48": {
+          "targetAlias": "net48",
+          "dependencies": {
+            "Grasshopper": {
+              "target": "Package",
+              "version": "[8.*, )"
+            },
+            "Microsoft.CSharp": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[4.7.0, )"
+            },
+            "Microsoft.NETFramework.ReferenceAssemblies": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.0.3, )",
+              "autoReferenced": true
+            },
+            "Microsoft.NETFramework.ReferenceAssemblies.net48": {
+              "target": "Package",
+              "version": "[1.0.3, )"
+            },
+            "RhinoCommon": {
+              "target": "Package",
+              "version": "[8.*, )"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/opt/homebrew/Cellar/dotnet/9.0.101/libexec/sdk/9.0.101/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
