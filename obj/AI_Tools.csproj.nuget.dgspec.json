@@ -1,0 +1,102 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/jorgemuyo/Desktop/AI_Tools/AI_Tools.csproj": {}
+  },
+  "projects": {
+    "/Users/jorgemuyo/Desktop/AI_Tools/AI_Tools.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/jorgemuyo/Desktop/AI_Tools/AI_Tools.csproj",
+        "projectName": "AI_Tools",
+        "projectPath": "/Users/jorgemuyo/Desktop/AI_Tools/AI_Tools.csproj",
+        "packagesPath": "/Users/jorgemuyo/.nuget/packages/",
+        "outputPath": "/Users/jorgemuyo/Desktop/AI_Tools/obj/",
+        "projectStyle": "PackageReference",
+        "crossTargeting": true,
+        "configFilePaths": [
+          "/Users/jorgemuyo/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net7.0"
+        ],
+        "sources": {
+          "/opt/homebrew/Cellar/dotnet/9.0.8/libexec/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net7.0": {
+            "targetAlias": "net7.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1701"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.100"
+      },
+      "frameworks": {
+        "net7.0": {
+          "targetAlias": "net7.0",
+          "dependencies": {
+            "Grasshopper": {
+              "include": "Compile, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "target": "Package",
+              "version": "[8.0.23304.9001, )"
+            },
+            "Microsoft.CodeAnalysis.CSharp": {
+              "target": "Package",
+              "version": "[4.7.0, )"
+            },
+            "Microsoft.NETFramework.ReferenceAssemblies.net48": {
+              "include": "None",
+              "target": "Package",
+              "version": "[1.0.3, )",
+              "generatePathProperty": true
+            },
+            "PdfSharp": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "System.Drawing.Common": {
+              "include": "Compile, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "itext7": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/opt/homebrew/Cellar/dotnet/9.0.8/libexec/sdk/9.0.109/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

@@ -82,7 +82,7 @@ namespace LLM.OllamaComps
         public OllamaComponentMakerComponent()
           : base("Component that Makes (Local)", "Local",
               "Generates and compiles a Grasshopper component via Ollama",
-              "crft", "LLM") { }
+              "AI Tools", "LLM") { }
         /// <summary>
         /// Automatically add and wire an OllamaModelParam dropdown on placement.
         /// </summary>
@@ -107,7 +107,7 @@ namespace LLM.OllamaComps
             pManager.AddTextParameter("Description", "D", "Natural-language description of the component", GH_ParamAccess.item);
             pManager.AddTextParameter("Component Name", "N", "Optional component class/name", GH_ParamAccess.item, string.Empty);
             pManager[3].Optional = true;
-            pManager.AddTextParameter("Category", "C", "Grasshopper ribbon category", GH_ParamAccess.item, "crft");
+            pManager.AddTextParameter("Category", "C", "Grasshopper ribbon category", GH_ParamAccess.item, "AI Tools");
             pManager.AddTextParameter("Subcategory", "S", "Grasshopper ribbon subcategory", GH_ParamAccess.item, "LLM");
             pManager.AddNumberParameter("Temperature", "T", "Generation temperature (0-1)", GH_ParamAccess.item, 0.7);
             pManager.AddIntegerParameter("Max Tokens", "MT", "Maximum number of tokens to generate", GH_ParamAccess.item, 2048);
@@ -623,7 +623,7 @@ namespace LLM.OllamaComps
             string model = string.Empty;
             string description = string.Empty;
             string componentName = string.Empty;
-            string category = "crft";
+            string category = "AI Tools";
             string subcategory = "LLM";
             double temperature = 0.7;
             string url = string.Empty;

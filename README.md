@@ -7,7 +7,7 @@ Plug-In developed by [**Jorge Muñoz Zanón**](https://www.linkedin.com/in/jorge
 
 <div align="center">
   <a href="https://youtu.be/unV0LstCBbw?si=zaSHL5S3cfa8WwwG">
-    <img src="assets/youtube.png" alt="Watch the video" style="width:100%; margin:0 auto;" />
+    <img src="./IMGS/Youtube_Image.png" alt="Watch the video" style="width:100%; margin:0 auto;" />
   </a>
 </div>
 
