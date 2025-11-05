@@ -2,16 +2,15 @@
 
 Plug-In developed by [**Jorge Muñoz Zanón**](https://www.linkedin.com/in/jorgemunozzanon/) 
 
-[**VIDEO**](https://youtu.be/unV0LstCBbw?si=zaSHL5S3cfa8WwwG)
+<!--[**VIDEO**](https://youtu.be/unV0LstCBbw?si=zaSHL5S3cfa8WwwG)-->
 
-<!--
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
--->
+
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=blVXMwGHQO4">
+    <img src="assets/youtube.png" alt="Watch the video" style="width:75%; margin:0 auto;" />
+  </a>
+</div>
+
 
 
 ## The project
