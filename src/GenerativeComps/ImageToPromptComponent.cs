@@ -15,6 +15,10 @@ namespace src.GenerativeComps
     /// </summary>
     public class ImageToPromptComponent : GH_Component_HTTPAsync
     {
+        private bool _lastButtonState = false;
+        private string _cachedPrompt = string.Empty;
+        private bool _hasCache = false;
+
         public ImageToPromptComponent()
           : base("Image to Prompt", "Img2Prompt",
               "Analyze an image and generate a CAD modeling description using OpenAI Vision API",
@@ -22,7 +26,7 @@ namespace src.GenerativeComps
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddBooleanParameter("Generate", "G", "Toggle to generate prompt from image", GH_ParamAccess.item, false);
+            pManager.AddBooleanParameter("Generate", "G", "Button trigger - pulse true to generate prompt from image", GH_ParamAccess.item, false);
             pManager.AddTextParameter("API Key", "K", "OpenAI API Key", GH_ParamAccess.item);
             pManager.AddTextParameter("Image Path", "I", "Path to image file (PNG, JPG, etc.)", GH_ParamAccess.item);
             pManager.AddTextParameter("Model", "M", "OpenAI Vision model to use", GH_ParamAccess.item, "gpt-4o-mini");
@@ -43,7 +47,7 @@ namespace src.GenerativeComps
                 switch (_currentState)
                 {
                     case RequestState.Off:
-                        this.Message = "Inactive";
+                        this.Message = "Ready";
                         _currentState = RequestState.Idle;
                         break;
                     case RequestState.Error:
@@ -70,14 +74,41 @@ namespace src.GenerativeComps
             int timeout = 60000;
 
             if (!DA.GetData("Generate", ref active)) return;
-            if (!active)
+
+            // Detect rising edge (false -> true transition) for button behavior
+            bool risingEdge = active && !_lastButtonState;
+            _lastButtonState = active;
+
+            // If currently requesting, continue processing
+            if (_currentState == RequestState.Requesting)
             {
-                _currentState = RequestState.Off;
-                _shouldExpire = true;
-                _response = string.Empty;
-                ExpireSolution(true);
+                this.Message = "Processing...";
+                DA.SetData(1, false);
                 return;
             }
+
+            // Always output cached results if available and not requesting
+            if (_hasCache && _currentState != RequestState.Requesting)
+            {
+                DA.SetData(0, _cachedPrompt);
+                DA.SetData(1, true);
+                this.Message = "Cached";
+
+                // If no rising edge, just return with cached data
+                if (!risingEdge)
+                {
+                    return;
+                }
+            }
+            else if (!risingEdge)
+            {
+                // No cache and no rising edge - just return ready state
+                this.Message = "Ready";
+                DA.SetData(1, false);
+                return;
+            }
+
+            // Rising edge detected - start new request
 
             if (!DA.GetData("API Key", ref apiKey))
             {
@@ -188,6 +219,10 @@ namespace src.GenerativeComps
                 var message = firstChoice.GetProperty("message");
                 var content = message.GetProperty("content").GetString() ?? string.Empty;
 
+                // Cache the result
+                _cachedPrompt = content;
+                _hasCache = true;
+
                 DA.SetData(0, content);
                 DA.SetData(1, true);
             }
@@ -196,6 +231,7 @@ namespace src.GenerativeComps
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, $"Failed to parse response: {ex.Message}");
                 DA.SetData(0, _response);
                 DA.SetData(1, false);
+                _hasCache = false;
             }
         }
 
