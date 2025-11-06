@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using Grasshopper.Kernel.Special;
 using Grasshopper.Kernel;
 
-namespace LLM.OllamaComps
+namespace src.OllamaComps
 {
     /// <summary>
     /// Dropdown parameter listing available OpenAI models via API or static fallback.

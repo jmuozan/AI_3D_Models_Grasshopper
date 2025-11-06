@@ -5,10 +5,10 @@ using System.Text.Json;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Grasshopper.Kernel;
-using LLM.Templates;
+using src.Templates;
 using System.Drawing;
 
-namespace LLM.GenerativeComps
+namespace src.GenerativeComps
 {
     /// <summary>
     /// OpenAI Vision API component - converts images to CAD modeling prompts
@@ -152,7 +152,7 @@ namespace LLM.GenerativeComps
                             new
                             {
                                 type = "text",
-                                text = "Describe an object that can be modeled in CAD with simple operations, being as explicit as possible, using measures if possible and focusing on single, self-contained items rather than assemblies. Try to make descriptions as operations in a CAD software. Try not to build super long prompts."
+                                text = "Describe this object in a simple, concise way suitable for text-to-CAD generation. Use plain text without markdown, bullet points, or formatting. Focus on: basic shape, key dimensions if visible, main features, and material/finish. Keep it under 100 words. Example: 'A rectangular wooden table with four cylindrical legs. The tabletop measures approximately 120cm x 60cm x 3cm thick. The legs are 5cm diameter and 70cm tall, positioned at each corner.' Do not use lists, headers, or special formatting."
                             },
                             new
                             {

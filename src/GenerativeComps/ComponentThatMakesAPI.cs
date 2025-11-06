@@ -4,38 +4,48 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using Grasshopper.Kernel;
+using Grasshopper.GUI.Canvas;
 using System.Text.Json;
-// removed CodeDOM-based compilation
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Rhino;
-using LLM.Templates;
-using Grasshopper.GUI.Canvas;
+using src.Templates;
 using System.Drawing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 
-namespace LLM.OllamaComps
+namespace src.OllamaComps
 {
-    public class OllamaComponentMakerComponent : GH_Component_HTTPAsync
+    /// <summary>
+    /// OpenAI-powered Grasshopper component generator with PDF context integration and enhanced error handling
+    /// </summary>
+    public class OpenAIComponentGeneratorComponent : GH_Component_HTTPAsync
     {
-        // Tracks compilation iterations
+        // Compilation tracking
         private int _compileAttempts = 0;
-        // Agent mode enabled by default
+        private const int _maxCompileAttempts = 5;
+        
+        // Agent mode settings
         private bool _agentMode = true;
-        // Cache for loaded PDF context
+        private bool _isAgentRunning = false;
+        
+        // Context management
         private string _contextCache = null;
-
+        // Maximum number of characters from PDF context to include
+        private const int _maxContextLength = 5000;
+        
         // Store current generation parameters for agent retries
         private string _currentDescription = string.Empty;
         private string _currentComponentName = string.Empty;
         private string _currentCategory = string.Empty;
         private string _currentSubcategory = string.Empty;
-
+        
         // Error tracker for compile errors
         private CompilationErrorTracker _errorTracker = new CompilationErrorTracker();
+        
         // Internal class to track compilation errors for adaptive retries
         private class CompilationErrorTracker
         {
@@ -64,94 +74,93 @@ namespace LLM.OllamaComps
                 return sb.ToString();
             }
         }
-        // Reference guide for C# Grasshopper scripting
-        private const string _guideReference =
-            "Reference the C# Scripting for Grasshopper guide available at docs/C#ScriptingForGrasshopper.pdf for namespaces, class structure, and API usage. ";
+        
         // Store last request details for retry
         private string _lastUrl = string.Empty;
         private string _lastBody = string.Empty;
+        
         // Store parameters for retry prompt
-        private string _model = string.Empty;
+        private string _openAIApiKey = string.Empty;
+        private string _openAIModel = "gpt-4o";
         private double _temperature = 0.7;
         private int _maxTokens = 2048;
         private int _timeoutMs = 60000;
         private string _systemPrompt = string.Empty;
         private string _userPrompt = string.Empty;
-        // Stored context file reference
-        private string _contextReference = string.Empty;
-        public OllamaComponentMakerComponent()
-          : base("Component that Makes (Local)", "Local",
-              "Generates and compiles a Grasshopper component via Ollama",
+        
+        public OpenAIComponentGeneratorComponent()
+          : base("Component that Makes (API)", "API",
+              "Generates and compiles a Grasshopper component via OpenAI",
               "AI Tools", "LLM") { }
-        /// <summary>
-        /// Automatically add and wire an OllamaModelParam dropdown on placement.
-        /// </summary>
         public override void AddedToDocument(GH_Document document)
         {
             base.AddedToDocument(document);
-            // If already wired, skip
-            if (Params.Input.Count > 1 && Params.Input[1].SourceCount > 0) return;
-            // Create and wire model dropdown list
-            var list = new OllamaModelParam();
+            if (Params.Input.Count > 2 && Params.Input[2].SourceCount > 0) return;
+            var list = new OpenAIModelParam();
             document.AddObject(list, false);
             document.NewSolution(false);
-            // Connect dropdown to Model input
-            if (Params.Input.Count > 1)
-                Params.Input[1].AddSource(list);
+            if (Params.Input.Count > 2)
+                Params.Input[2].AddSource(list);
         }
 
-        protected override void RegisterInputParams(GH_InputParamManager pManager)
+        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddBooleanParameter("Generate", "G", "Toggle to generate and compile component", GH_ParamAccess.item, false);
-            pManager.AddParameter(new OllamaModelParam(), "Model", "M", "Ollama model to use", GH_ParamAccess.item);
+            pManager.AddTextParameter("API Key", "K", "OpenAI API Key", GH_ParamAccess.item);
+            pManager.AddParameter(new OpenAIModelParam(), "Model", "M", "OpenAI model to use", GH_ParamAccess.item);
             pManager.AddTextParameter("Description", "D", "Natural-language description of the component", GH_ParamAccess.item);
             pManager.AddTextParameter("Component Name", "N", "Optional component class/name", GH_ParamAccess.item, string.Empty);
-            pManager[3].Optional = true;
+            pManager[4].Optional = true;
             pManager.AddTextParameter("Category", "C", "Grasshopper ribbon category", GH_ParamAccess.item, "AI Tools");
             pManager.AddTextParameter("Subcategory", "S", "Grasshopper ribbon subcategory", GH_ParamAccess.item, "LLM");
             pManager.AddNumberParameter("Temperature", "T", "Generation temperature (0-1)", GH_ParamAccess.item, 0.7);
             pManager.AddIntegerParameter("Max Tokens", "MT", "Maximum number of tokens to generate", GH_ParamAccess.item, 2048);
-            pManager.AddTextParameter("URL", "U", "Ollama API endpoint", GH_ParamAccess.item, "http://localhost:11434/api/generate");
+            // Folder path containing PDF context files (optional)
+            pManager.AddTextParameter("Context Folder", "CF", "Folder path containing PDF context files", GH_ParamAccess.item, string.Empty);
+            pManager[9].Optional = true;
+            pManager.AddBooleanParameter("Use Context", "UC", "Use PDF context from coding books", GH_ParamAccess.item, true);
             pManager.AddIntegerParameter("Timeout", "TO", "Request timeout (ms)", GH_ParamAccess.item, 60000);
         }
 
-        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddTextParameter("Generated Code", "C", "Generated C# code", GH_ParamAccess.item);
             pManager.AddTextParameter("Component Class", "CC", "Generated component class name", GH_ParamAccess.item);
             pManager.AddTextParameter("Source Path", "CS", "File path of saved .cs source", GH_ParamAccess.item);
             pManager.AddTextParameter("Assembly Path", "DLL", "File path of compiled .gha assembly", GH_ParamAccess.item);
             pManager.AddBooleanParameter("Success", "S", "Compilation success", GH_ParamAccess.item);
+            pManager.AddTextParameter("Context Info", "CI", "Information about loaded context", GH_ParamAccess.item);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            // Delegates to agent-based logic if enabled
-            if (_agentMode)
-            {
-                SolveInstanceAgent(DA);
-                return;
-            }
             if (_shouldExpire)
             {
                 switch (_currentState)
                 {
                     case RequestState.Off:
-                        // No active request
                         this.Message = "Inactive";
                         _currentState = RequestState.Idle;
                         break;
                     case RequestState.Error:
-                        // Treat HTTP or network errors as a compile retry
-                        this.Message = $"Retrying after error...";
+                        this.Message = "ERROR";
+                        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, _response);
                         _currentState = RequestState.Idle;
-                        ProcessAndCompileCode(DA);
                         break;
                     case RequestState.Done:
-                        // Initial generation complete; proceed to compile
-                        this.Message = "Processing code...";
+                        this.Message = "Complete!";
                         _currentState = RequestState.Idle;
-                        ProcessAndCompileCode(DA);
+                        
+                        // In agent mode, process the response but don't immediately set outputs
+                        if (_agentMode && _isAgentRunning)
+                        {
+                            AgentProcessAndCompileCode(DA);
+                        }
+                        else
+                        {
+                            // Regular processing for non-agent mode
+                            ProcessAndCompileCode(DA);
+                        }
                         break;
                 }
                 _shouldExpire = false;
@@ -159,12 +168,18 @@ namespace LLM.OllamaComps
             }
 
             bool active = false;
-            string model = string.Empty;
+            string apiKey = string.Empty;
+            string model = "gpt-4o";
             string description = string.Empty;
             string componentName = string.Empty;
+            string category = "AI Tools";
+            string subcategory = "LLM";
             double temperature = 0.7;
-            string url = string.Empty;
+            int maxTokens = 2048;
+            // User-specified folder for PDF context
+            string contextFolder = string.Empty;
             int timeout = 60000;
+            bool useContext = true;
 
             if (!DA.GetData("Generate", ref active)) return;
             if (!active)
@@ -172,21 +187,34 @@ namespace LLM.OllamaComps
                 _currentState = RequestState.Off;
                 _shouldExpire = true;
                 _response = string.Empty;
+                _isAgentRunning = false;
                 ExpireSolution(true);
                 return;
             }
-            if (!DA.GetData("Model", ref model)) return;
+            
+            if (!DA.GetData("API Key", ref apiKey)) 
+            {
+                _response = "API Key is required";
+                _currentState = RequestState.Error;
+                _shouldExpire = true;
+                ExpireSolution(true);
+                return;
+            }
+            
+            DA.GetData("Model", ref model);
             if (!DA.GetData("Description", ref description)) return;
             DA.GetData("Component Name", ref componentName);
+            DA.GetData("Category", ref category);
+            DA.GetData("Subcategory", ref subcategory);
             DA.GetData("Temperature", ref temperature);
-            if (!DA.GetData("URL", ref url)) return;
-            DA.GetData("Timeout", ref timeout);
-            int maxTokens = 2048;
             DA.GetData("Max Tokens", ref maxTokens);
+            DA.GetData("Context Folder", ref contextFolder);
+            DA.GetData("Use Context", ref useContext);
+            DA.GetData("Timeout", ref timeout);
 
-            if (string.IsNullOrEmpty(url))
+            if (string.IsNullOrEmpty(apiKey))
             {
-                _response = "Empty URL";
+                _response = "Empty API Key";
                 _currentState = RequestState.Error;
                 _shouldExpire = true;
                 ExpireSolution(true);
@@ -201,167 +229,173 @@ namespace LLM.OllamaComps
                 return;
             }
 
-            // Build context reference for local files
-            string contextReference = string.Empty;
-            try
-            {
-                var pluginDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
-                var ctxDir = Path.Combine(pluginDir, "context_for_llm");
-                if (Directory.Exists(ctxDir))
-                {
-                    var files = Directory.GetFiles(ctxDir).Select(Path.GetFileName);
-                    contextReference = "Available context files: " + string.Join(", ", files) + ". Please consider their content. ";
-                }
-            }
-            catch { }
-            // Combine context, guide reference, and core instructions into one prompt
-            // Store for retry usage
-            _contextReference = contextReference;
-            string systemPrompt = contextReference + _guideReference +
-                                  "You are an expert C# programmer specializing in Grasshopper plugin development. " +
-                                  "Create a complete, well-structured Grasshopper component based on the description provided. " +
-                                  "Respond with only the full C# code for the component (no explanations or markdown).";
-            // Build user prompt
-            string userPrompt = "Component description: " + description;
-            if (!string.IsNullOrEmpty(componentName))
-                userPrompt += $"\nComponent name: {componentName}";
-            // Merge into one prompt for Ollama
-            string fullPrompt = systemPrompt + "\n" + userPrompt;
-            // Prepare request body for Ollama /api/generate
-            // Build JSON payload using serializer to handle escaping
-            var requestPayload = new
-            {
-                model = model,
-                prompt = fullPrompt,
-                max_tokens = maxTokens,
-                temperature = temperature,
-                stream = false
-            };
-            string body = JsonSerializer.Serialize(requestPayload);
-            _currentState = RequestState.Requesting;
-            this.Message = "Generating Component...";
-            // Store request details for potential retries
-            _lastUrl = url;
-            _lastBody = body;
+            // Store current params for agent retries
+            _currentDescription = description;
+            _currentComponentName = componentName;
+            _currentCategory = category;
+            _currentSubcategory = subcategory;
             _compileAttempts = 0;
-            _model = model;
+            _errorTracker = new CompilationErrorTracker();
+            
+            // Load PDF context if enabled
+            string contextInfo = "No context used";
+            if (useContext)
+            {
+                this.Message = "Loading context...";
+                string[] pdfFiles = null;
+                if (!string.IsNullOrWhiteSpace(contextFolder) && Directory.Exists(contextFolder))
+                {
+                    pdfFiles = Directory.GetFiles(contextFolder, "*.pdf", SearchOption.TopDirectoryOnly);
+                }
+                _contextCache ??= PdfContextManager.LoadPdfContext(pdfFiles);
+                // Truncate context to avoid exceeding model limits
+                if (!string.IsNullOrEmpty(_contextCache) && _contextCache.Length > _maxContextLength)
+                {
+                    _contextCache = _contextCache.Substring(0, _maxContextLength)
+                                   + Environment.NewLine + "...[context truncated]...";
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                        $"PDF context truncated to {_maxContextLength} characters to avoid exceeding model limits.");
+                }
+
+                if (string.IsNullOrEmpty(_contextCache))
+                    contextInfo = "No PDF context loaded";
+                else
+                    contextInfo = $"Using context from PDFs ({_contextCache.Length / 1024} KB)";
+            }
+
+            // Output context info
+            DA.SetData("Context Info", contextInfo);
+
+            // Build the system prompt with context info and coding guidelines
+            string systemPrompt = BuildSystemPrompt(description, componentName, category, subcategory);
+            
+            // Agent mode started
+            _isAgentRunning = _agentMode;
+            
+            // OpenAI API URL
+            string openAiApiUrl = "https://api.openai.com/v1/chat/completions";
+            
+            // Store for later retry if needed
+            _openAIApiKey = apiKey;
+            _openAIModel = model;
             _temperature = temperature;
             _maxTokens = maxTokens;
             _timeoutMs = timeout;
+            
+            // Prepare request for OpenAI API
+            var requestPayload = new
+            {
+                model = model,
+                messages = new[]
+                {
+                    new { role = "system", content = systemPrompt },
+                    new { role = "user", content = description }
+                },
+                max_tokens = maxTokens,
+                temperature = temperature
+            };
+            
+            string body = JsonSerializer.Serialize(requestPayload);
+            _currentState = RequestState.Requesting;
+            this.Message = "Generating Component...";
+            
+            // Store request details for potential retries
+            _lastUrl = openAiApiUrl;
+            _lastBody = body;
             _systemPrompt = systemPrompt;
-            _userPrompt = userPrompt;
+            
+            // Add API key to headers
+            var headers = new Dictionary<string, string>
+            {
+                ["Authorization"] = $"Bearer {apiKey}",
+                ["Content-Type"] = "application/json"
+            };
+            
             // Send initial generation request
-            POSTAsync(url, body, "application/json", string.Empty, timeout);
+            POSTWithHeadersAsync(openAiApiUrl, body, headers, timeout);
         }
 
-        private void ProcessAndCompileCode(IGH_DataAccess DA)
+        /// <summary>
+        /// Sends an HTTP POST with custom headers asynchronously.
+        /// </summary>
+        protected void POSTWithHeadersAsync(string url, string body, Dictionary<string, string> headers, int timeout)
         {
             try
             {
-                // Try to parse JSON response, otherwise treat raw response as code
-                string generatedText;
-                try
+                var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMilliseconds(timeout) };
+                
+                // Add request headers (exclude content headers like Content-Type)
+                foreach (var header in headers)
                 {
-                    using var jsonDocument = JsonDocument.Parse(_response);
-                    if (jsonDocument.RootElement.TryGetProperty("response", out var respProp))
-                        generatedText = respProp.GetString() ?? string.Empty;
-                    else
-                        generatedText = jsonDocument.RootElement.GetRawText();
-                }
-                catch (JsonException)
-                {
-                    generatedText = _response;
-                }
-                string cleanCode = generatedText.Trim();
-                if (cleanCode.StartsWith("```"))
-                    cleanCode = cleanCode[(cleanCode.IndexOf('\n') + 1)..];
-                if (cleanCode.EndsWith("```"))
-                    cleanCode = cleanCode[..cleanCode.LastIndexOf("```")];
-                cleanCode = cleanCode.Trim();
-                // Remove any leading/trailing HTML/XML tags or metadata lines (e.g., <think> wrappers)
-                var lines = cleanCode.Split(new[] {'\r','\n'}, StringSplitOptions.RemoveEmptyEntries).ToList();
-                // Strip leading tags
-                while (lines.Count > 0 && lines[0].TrimStart().StartsWith("<") && lines[0].Contains(">"))
-                    lines.RemoveAt(0);
-                // Strip trailing tags
-                while (lines.Count > 0 && lines[^1].TrimEnd().StartsWith("<") && lines[^1].Contains(">"))
-                    lines.RemoveAt(lines.Count - 1);
-                cleanCode = string.Join("\n", lines).Trim();
-                string className = ExtractClassName(cleanCode);
-                string csPath = SaveComponentCode(cleanCode, className);
-                string assemblyPath = Path.ChangeExtension(csPath, ".gha");
-                // Attempt compilation
-                bool success = true;
-                Exception compileEx = null;
-                try
-                {
-                    CompileCode(cleanCode, assemblyPath);
-                }
-                catch (Exception ex)
-                {
-                    compileEx = ex;
-                    success = false;
-                }
-                // Handle compile failures with retry via LLM
-                if (!success)
-                {
-                    _compileAttempts++;
-                    // Build retry prompt including last generated code and errors
-                    string retryPrompt = BuildRetryPrompt(cleanCode, compileEx?.Message ?? "Unknown compilation error");
-                    this.Message = $"Retrying, attempt #{_compileAttempts}...";
-                    var retryPayload = new
+                    if (!header.Key.Equals("Content-Type", StringComparison.OrdinalIgnoreCase))
                     {
-                        model = _model,
-                        prompt = retryPrompt,
-                        max_tokens = _maxTokens,
-                        temperature = _temperature,
-                        stream = false
-                    };
-                    string retryBody = JsonSerializer.Serialize(retryPayload);
-                    _currentState = RequestState.Requesting;
-                    POSTAsync(_lastUrl, retryBody, "application/json", string.Empty, _timeoutMs);
-                    _lastBody = retryBody;
-                    _shouldExpire = false;
-                    return;
+                        client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                    }
                 }
-                if (!success)
+                
+                var content = new System.Net.Http.StringContent(body, Encoding.UTF8, "application/json");
+                
+                Task.Run(async () =>
                 {
-                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Compilation failed after retries: " + (compileEx?.Message ?? ""));
-                    assemblyPath = string.Empty;
-                }
-                // Output results
-                DA.SetData(0, cleanCode);
-                DA.SetData(1, className);
-                DA.SetData(2, csPath);
-                DA.SetData(3, assemblyPath);
-                DA.SetData(4, success);
+                    try
+                    {
+                        var resp = await client.PostAsync(url, content).ConfigureAwait(false);
+                        string respBody = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        
+                        if (resp.IsSuccessStatusCode)
+                        {
+                            _response = respBody;
+                            _currentState = RequestState.Done;
+                        }
+                        else
+                        {
+                            _response = $"HTTP Error {(int)resp.StatusCode} {resp.ReasonPhrase}: {respBody}";
+                            _currentState = RequestState.Error;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _response = ex.Message;
+                        _currentState = RequestState.Error;
+                    }
+                    finally
+                    {
+                        _shouldExpire = true;
+                        ExpireSolution(true);
+                        client.Dispose();
+                    }
+                });
             }
             catch (Exception ex)
             {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Error processing response: " + ex.Message);
-                DA.SetData(0, _response);
-                DA.SetData(4, false);
+                _response = ex.Message;
+                _currentState = RequestState.Error;
+                _shouldExpire = true;
+                ExpireSolution(true);
             }
         }
-        
-        /// <summary>
-        /// Agent processing and compilation with retry logic.
-        /// </summary>
+
         private void AgentProcessAndCompileCode(IGH_DataAccess DA)
         {
             try
             {
-                using var jsonDocument = JsonDocument.Parse(_response);
-                var generatedText = jsonDocument.RootElement.GetProperty("response").GetString() ?? string.Empty;
+                // Parse OpenAI response
+                var jsonDocument = JsonDocument.Parse(_response);
+                var choices = jsonDocument.RootElement.GetProperty("choices");
+                var firstChoice = choices[0];
+                var message = firstChoice.GetProperty("message");
+                var generatedText = message.GetProperty("content").GetString() ?? string.Empty;
+                
                 string cleanCode = CleanGeneratedCode(generatedText);
-
+                
                 string className = ExtractClassName(cleanCode);
                 string csPath = SaveComponentCode(cleanCode, className);
                 string assemblyPath = Path.ChangeExtension(csPath, ".gha");
-
+                
+                // Attempt compilation
                 bool success = true;
                 Exception compileEx = null;
-
+                
                 try
                 {
                     CompileCode(cleanCode, assemblyPath);
@@ -371,46 +405,123 @@ namespace LLM.OllamaComps
                 {
                     compileEx = ex;
                     success = false;
+                    
+                    // Add the error to our tracker
                     _errorTracker.AddError(ex.Message);
                 }
-
-                // If compilation failed, retry indefinitely until success or user stops
-                if (!success)
+                
+                // Handle agent retry logic
+                if (!success && _compileAttempts < _maxCompileAttempts)
                 {
                     _compileAttempts++;
-                    this.Message = $"Retrying, attempt #{_compileAttempts}...";
-
+                    this.Message = $"Retrying ({_compileAttempts}/{_maxCompileAttempts})...";
+                    
+                    // Create an improved prompt with error feedback
                     string retryPrompt = BuildRetryPrompt(cleanCode, compileEx?.Message ?? "Unknown error");
+                    
+                    // Send the retry request to OpenAI
                     var retryPayload = new
                     {
-                        model = _model,
-                        prompt = retryPrompt,
+                        model = _openAIModel,
+                        messages = new[]
+                        {
+                            new { role = "system", content = "You are an expert C# programmer specializing in Grasshopper component development. Fix compilation errors in the given code." },
+                            new { role = "user", content = retryPrompt }
+                        },
                         max_tokens = _maxTokens,
-                        temperature = _temperature,
-                        stream = false
+                        temperature = Math.Max(0.1, _temperature - 0.1) // Lower temperature for fixes
                     };
+                    
                     string retryBody = JsonSerializer.Serialize(retryPayload);
                     _currentState = RequestState.Requesting;
-                    POSTAsync(_lastUrl, retryBody, "application/json", string.Empty, _timeoutMs);
+                    
+                    // Add API key to headers
+                    var headers = new Dictionary<string, string>
+                    {
+                        ["Authorization"] = $"Bearer {_openAIApiKey}",
+                        ["Content-Type"] = "application/json" 
+                    };
+                    
+                    // Send retry request
+                    POSTWithHeadersAsync(_lastUrl, retryBody, headers, _timeoutMs);
+                    
+                    // Don't set outputs yet - wait for the retry
                     return;
                 }
-
+                
+                // All retries exhausted or successful compilation
+                _isAgentRunning = false;
+                
+                // Set outputs
                 DA.SetData(0, cleanCode);
                 DA.SetData(1, className);
                 DA.SetData(2, csPath);
                 DA.SetData(3, success ? assemblyPath : string.Empty);
                 DA.SetData(4, success);
-
+                
                 if (success)
                 {
-                    AddRuntimeMessage(GH_RuntimeMessageLevel.Remark,
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, 
                         $"Successfully generated and compiled {className} after {_compileAttempts + 1} attempts.");
                 }
                 else
                 {
-                    AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, 
                         "Failed to compile component after maximum retry attempts.");
                     AddRuntimeMessage(GH_RuntimeMessageLevel.Error, compileEx?.Message ?? "Unknown error");
+                }
+            }
+            catch (Exception ex)
+            {
+                _isAgentRunning = false;
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Error processing response: " + ex.Message);
+                DA.SetData(0, _response);
+                DA.SetData(4, false);
+            }
+        }
+
+        private void ProcessAndCompileCode(IGH_DataAccess DA)
+        {
+            try
+            {
+                // Parse OpenAI response
+                var jsonDocument = JsonDocument.Parse(_response);
+                var choices = jsonDocument.RootElement.GetProperty("choices");
+                var firstChoice = choices[0];
+                var message = firstChoice.GetProperty("message");
+                var generatedText = message.GetProperty("content").GetString() ?? string.Empty;
+                
+                string cleanCode = CleanGeneratedCode(generatedText);
+                
+                string className = ExtractClassName(cleanCode);
+                string csPath = SaveComponentCode(cleanCode, className);
+                string assemblyPath = Path.ChangeExtension(csPath, ".gha");
+                
+                // Attempt compilation
+                bool success = true;
+                Exception compileEx = null;
+                
+                try
+                {
+                    CompileCode(cleanCode, assemblyPath);
+                }
+                catch (Exception ex)
+                {
+                    compileEx = ex;
+                    success = false;
+                }
+                
+                // Output results
+                DA.SetData(0, cleanCode);
+                DA.SetData(1, className);
+                DA.SetData(2, csPath);
+                DA.SetData(3, success ? assemblyPath : string.Empty);
+                DA.SetData(4, success);
+                
+                if (!success)
+                {
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, 
+                        "Compilation failed: " + (compileEx?.Message ?? "Unknown error"));
                 }
             }
             catch (Exception ex)
@@ -427,7 +538,8 @@ namespace LLM.OllamaComps
         private string CleanGeneratedCode(string generatedText)
         {
             string cleanCode = generatedText.Trim();
-
+            
+            // Remove markdown code blocks
             if (cleanCode.StartsWith("```"))
             {
                 int firstNewLine = cleanCode.IndexOf('\n');
@@ -436,7 +548,7 @@ namespace LLM.OllamaComps
                     cleanCode = cleanCode.Substring(firstNewLine + 1);
                 }
             }
-
+            
             if (cleanCode.EndsWith("```"))
             {
                 int lastBackticks = cleanCode.LastIndexOf("```");
@@ -445,15 +557,22 @@ namespace LLM.OllamaComps
                     cleanCode = cleanCode.Substring(0, lastBackticks);
                 }
             }
-
+            
+            // Remove any leading/trailing tags or metadata
             var lines = cleanCode.Split(new[] {'\r','\n'}, StringSplitOptions.RemoveEmptyEntries).ToList();
-
+            
+            // Strip leading XML tags
             while (lines.Count > 0 && (lines[0].TrimStart().StartsWith("<") && lines[0].Contains(">")))
+            {
                 lines.RemoveAt(0);
-
+            }
+            
+            // Strip trailing XML tags
             while (lines.Count > 0 && (lines[^1].TrimEnd().EndsWith(">") && lines[^1].Contains("<")))
+            {
                 lines.RemoveAt(lines.Count - 1);
-
+            }
+            
             return string.Join("\n", lines).Trim();
         }
 
@@ -463,17 +582,20 @@ namespace LLM.OllamaComps
         private string BuildSystemPrompt(string description, string componentName, string category, string subcategory)
         {
             var sb = new StringBuilder();
-
+            
+            // Core system context
             sb.AppendLine("You are an expert C# programmer specializing in Grasshopper plugin development.");
             sb.AppendLine("Create a complete, well-structured Grasshopper component based on the description provided.");
-
+            
+            // Add PDF context if available
             if (!string.IsNullOrEmpty(_contextCache))
             {
                 sb.AppendLine("\n--- REFERENCE CONTEXT ---");
                 sb.AppendLine(_contextCache);
                 sb.AppendLine("--- END REFERENCE CONTEXT ---\n");
             }
-
+            
+            // Coding guidelines
             sb.AppendLine("CODING REQUIREMENTS:");
             sb.AppendLine("1. Use standard Grasshopper component patterns with RegisterInputParams, RegisterOutputParams, and SolveInstance methods");
             sb.AppendLine("2. Include all necessary namespaces, especially: Rhino.Geometry, Grasshopper.Kernel");
@@ -484,11 +606,14 @@ namespace LLM.OllamaComps
             sb.AppendLine("7. NEVER use \"throw new NotImplementedException()\", always implement all methods");
             sb.AppendLine("8. Only reference Grasshopper, Rhino, System, System.Core, and GH_IO assemblies");
             sb.AppendLine("9. Use simple namespaces without deeply nested structures");
-
+            
+            // Component details
             sb.AppendLine($"\nComponent Description: {description}");
             if (!string.IsNullOrEmpty(componentName))
+            {
                 sb.AppendLine($"Component Class Name: {componentName}");
-
+            }
+            
             return sb.ToString();
         }
 
@@ -498,19 +623,19 @@ namespace LLM.OllamaComps
         private string BuildRetryPrompt(string previousCode, string error)
         {
             var sb = new StringBuilder();
-
+            
             sb.AppendLine("You are an expert C# programmer specializing in Grasshopper plugin development.");
             sb.AppendLine("Fix the compilation errors in the previously generated component.");
-
+            
             sb.AppendLine("\n--- COMPILATION ERRORS ---");
             sb.AppendLine(error);
             sb.AppendLine(_errorTracker.GenerateErrorPrompt());
             sb.AppendLine("--- END COMPILATION ERRORS ---\n");
-
+            
             sb.AppendLine("--- PREVIOUS CODE ---");
             sb.AppendLine(previousCode);
             sb.AppendLine("--- END PREVIOUS CODE ---\n");
-
+            
             sb.AppendLine("INSTRUCTIONS:");
             sb.AppendLine("1. Carefully analyze the compilation errors");
             sb.AppendLine("2. Fix ALL errors in the code");
@@ -518,7 +643,7 @@ namespace LLM.OllamaComps
             sb.AppendLine("4. Ensure all namespaces are correct and accessible");
             sb.AppendLine("5. Use only types from Rhino, Grasshopper, System, System.Core, and GH_IO assemblies");
             sb.AppendLine("6. Do not use any third-party libraries");
-
+            
             return sb.ToString();
         }
 
@@ -554,32 +679,40 @@ namespace LLM.OllamaComps
             // Use Roslyn for cross-platform compilation
             // Parse the source
             var syntaxTree = CSharpSyntaxTree.ParseText(code);
+            
             // Gather references from loaded assemblies
             var assemblies = AppDomain.CurrentDomain.GetAssemblies()
                 .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location) && File.Exists(a.Location))
                 .Select(a => a.Location)
                 .Distinct();
+                
             var refs = assemblies.Select(path => MetadataReference.CreateFromFile(path)).ToList();
+            
             // Explicitly ensure Grasshopper, GH_IO, and plugin assembly are referenced
             try
             {
                 var ghLoc = typeof(Grasshopper.Kernel.GH_Component).Assembly.Location;
                 if (File.Exists(ghLoc)) refs.Add(MetadataReference.CreateFromFile(ghLoc));
+                
                 var ghIoAsm = AppDomain.CurrentDomain.GetAssemblies()
                     .FirstOrDefault(a => a.GetName().Name.Equals("GH_IO", StringComparison.OrdinalIgnoreCase));
                 if (ghIoAsm != null && File.Exists(ghIoAsm.Location))
                     refs.Add(MetadataReference.CreateFromFile(ghIoAsm.Location));
+                    
                 var pluginAsm = Assembly.GetExecutingAssembly().Location;
                 if (File.Exists(pluginAsm)) refs.Add(MetadataReference.CreateFromFile(pluginAsm));
             }
             catch { /* best-effort references */ }
+            
             // Create compilation
             var compilation = CSharpCompilation.Create(
                 Path.GetFileNameWithoutExtension(outputPath),
                 new[] { syntaxTree },
                 refs,
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+                
             var result = compilation.Emit(outputPath);
+            
             if (!result.Success)
             {
                 var failures = result.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error);
@@ -589,134 +722,9 @@ namespace LLM.OllamaComps
                 throw new Exception(sb.ToString());
             }
         }
+
+        protected override Bitmap Icon => null;
         
-        /// <summary>
-        /// Agent-based SolveInstance logic extracted to separate method.
-        /// </summary>
-        private void SolveInstanceAgent(IGH_DataAccess DA)
-        {
-            // Agent-based generation and compilation logic
-            if (_shouldExpire)
-            {
-                switch (_currentState)
-                {
-                    case RequestState.Off:
-                        this.Message = "Inactive";
-                        _currentState = RequestState.Idle;
-                        break;
-                    case RequestState.Error:
-                        this.Message = "ERROR";
-                        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, _response);
-                        _currentState = RequestState.Idle;
-                        break;
-                    case RequestState.Done:
-                        this.Message = "Complete!";
-                        _currentState = RequestState.Idle;
-                        AgentProcessAndCompileCode(DA);
-                        break;
-                }
-                _shouldExpire = false;
-                return;
-            }
-
-            bool active = false;
-            string model = string.Empty;
-            string description = string.Empty;
-            string componentName = string.Empty;
-            string category = "AI Tools";
-            string subcategory = "LLM";
-            double temperature = 0.7;
-            string url = string.Empty;
-            int timeout = 60000;
-            int maxTokens = 2048;
-
-            if (!DA.GetData("Generate", ref active)) return;
-            if (!active)
-            {
-                _currentState = RequestState.Off;
-                _shouldExpire = true;
-                _response = string.Empty;
-                ExpireSolution(true);
-                return;
-            }
-
-            if (!DA.GetData("Model", ref model)) return;
-            if (!DA.GetData("Description", ref description)) return;
-            DA.GetData("Component Name", ref componentName);
-            DA.GetData("Category", ref category);
-            DA.GetData("Subcategory", ref subcategory);
-            DA.GetData("Temperature", ref temperature);
-            if (!DA.GetData("URL", ref url)) return;
-            DA.GetData("Timeout", ref timeout);
-            DA.GetData("Max Tokens", ref maxTokens);
-
-            if (string.IsNullOrEmpty(url))
-            {
-                _response = "Empty URL";
-                _currentState = RequestState.Error;
-                _shouldExpire = true;
-                ExpireSolution(true);
-                return;
-            }
-            if (string.IsNullOrEmpty(description))
-            {
-                _response = "Empty component description";
-                _currentState = RequestState.Error;
-                _shouldExpire = true;
-                ExpireSolution(true);
-                return;
-            }
-
-            // Initialize agent parameters
-            _currentDescription = description;
-            _currentComponentName = componentName;
-            _currentCategory = category;
-            _currentSubcategory = subcategory;
-            _compileAttempts = 0;
-            _errorTracker = new CompilationErrorTracker();
-
-            // Load PDF context once
-            if (_contextCache == null)
-            {
-                this.Message = "Loading context...";
-                _contextCache = PdfContextManager.LoadPdfContext();
-                if (string.IsNullOrEmpty(_contextCache))
-                    AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "No context files found in 'context_for_llm' folder. Agent will function with limited context.");
-                else
-                    AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, $"Loaded context data from PDFs ({_contextCache.Length / 1024} KB).");
-            }
-
-            // Build system prompt with context
-            string systemPrompt = BuildSystemPrompt(description, componentName, category, subcategory);
-
-            // Prepare request payload
-            var requestPayload = new
-            {
-                model,
-                prompt = systemPrompt,
-                max_tokens = maxTokens,
-                temperature,
-                stream = false
-            };
-
-            string body = JsonSerializer.Serialize(requestPayload);
-            _currentState = RequestState.Requesting;
-            this.Message = "Generating Component...";
-
-            // Store details for potential retries
-            _lastUrl = url;
-            _lastBody = body;
-            _model = model;
-            _temperature = temperature;
-            _maxTokens = maxTokens;
-            _timeoutMs = timeout;
-            _systemPrompt = systemPrompt;
-
-            // Initial request
-            POSTAsync(url, body, "application/json", string.Empty, timeout);
-        }
-
-        protected override System.Drawing.Bitmap Icon => null;
-        public override Guid ComponentGuid => new Guid("BF4C9D32-A84B-4BA2-BD5F-E75DEF32CC71");
+        public override Guid ComponentGuid => new Guid("C28A75F3-4957-41B2-A1D2-9E32CF5A2EF0");
     }
 }

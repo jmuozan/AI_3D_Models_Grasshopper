@@ -5,7 +5,7 @@ using System.Text;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 
-namespace LLM.OllamaComps
+namespace src.OllamaComps
 {
     public static class PdfContextManager
     {

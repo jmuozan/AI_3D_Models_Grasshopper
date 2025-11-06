@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Special;
 
-namespace LLM.OllamaComps
+namespace src.OllamaComps
 {
     /// <summary>
     /// Dropdown parameter listing local Ollama models via 'ollama list'.

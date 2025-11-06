@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Grasshopper.Kernel;
 
-namespace LLM.Templates
+namespace src.Templates
 {
     /// <summary>
     /// Base class for asynchronous HTTP-based Grasshopper components.

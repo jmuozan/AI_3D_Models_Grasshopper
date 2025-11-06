@@ -8,7 +8,7 @@ using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas.Parser;
 using iText.Kernel.Pdf.Canvas.Parser.Listener;
 
-namespace LLM.Utils
+namespace src.Utils
 {
     /// <summary>
     /// Utility class for extracting text from PDFs and managing context for LLM generation
