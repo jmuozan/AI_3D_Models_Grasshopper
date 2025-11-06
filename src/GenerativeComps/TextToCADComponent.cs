@@ -34,11 +34,12 @@ namespace src.GenerativeComps
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddBooleanParameter("Generate", "G", "Toggle to start generation", GH_ParamAccess.item, false);
+            pManager.AddBooleanParameter("Generate", "G", "Button trigger - pulse true to start generation", GH_ParamAccess.item, false);
             pManager.AddTextParameter("API Key", "K", "KittyCAD (Zoo) API Key", GH_ParamAccess.item);
             pManager.AddTextParameter("Prompt", "P", "Text description of 3D model to generate", GH_ParamAccess.item);
             pManager.AddTextParameter("Output Directory", "D", "Directory to save generated files", GH_ParamAccess.item);
             pManager.AddIntegerParameter("Format", "F", "Output format: 1=STL, 2=STEP (recommended), 3=OBJ", GH_ParamAccess.item, 2);
+            pManager.AddBooleanParameter("Keep File", "KF", "Keep the saved file after import (true = keep, false = delete)", GH_ParamAccess.item, true);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -56,18 +57,18 @@ namespace src.GenerativeComps
             string prompt = string.Empty;
             string outputDir = string.Empty;
             int formatCode = 2;
+            bool keepFile = true;
 
             if (!DA.GetData("Generate", ref generate)) return;
 
-            // Detect toggle state change
-            bool toggleChanged = generate != _lastToggleState;
+            // Detect rising edge (false -> true transition) for button behavior
+            bool risingEdge = generate && !_lastToggleState;
             _lastToggleState = generate;
 
-            // If not generating, reset state and output cached results if available
-            if (!generate)
+            // Always output cached results or errors, regardless of button state
+            if (!_isGenerating)
             {
-                _isGenerating = false;
-                _statusMessage = "Inactive";
+                _statusMessage = "Ready";
                 this.Message = _statusMessage;
 
                 // Output last generated results or error if available
@@ -90,7 +91,12 @@ namespace src.GenerativeComps
                     DA.SetData(2, false);
                     DA.SetData(3, _statusMessage);
                 }
-                return;
+
+                // If no rising edge detected and not generating, just return
+                if (!risingEdge)
+                {
+                    return;
+                }
             }
 
             if (!DA.GetData("API Key", ref apiKey))
@@ -115,6 +121,7 @@ namespace src.GenerativeComps
             }
 
             DA.GetData("Format", ref formatCode);
+            DA.GetData("Keep File", ref keepFile);
 
             // Validate format
             if (formatCode < 1 || formatCode > 3)
@@ -195,27 +202,9 @@ namespace src.GenerativeComps
                 return;
             }
 
-            // Only start new generation if toggle just changed to true
-            if (!toggleChanged)
-            {
-                // Toggle is still on but no new generation - output cached results or error
-                if (_lastError != null)
-                {
-                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, _lastError);
-                    DA.SetData(2, false);
-                    DA.SetData(3, "ERROR: " + _lastError);
-                    this.Message = "Error";
-                }
-                else if (_lastGeneratedBreps != null && _lastGeneratedBreps.Count > 0)
-                {
-                    DA.SetDataList(0, _lastGeneratedBreps);
-                    DA.SetData(1, _lastFilePath);
-                    DA.SetData(2, true);
-                    DA.SetData(3, $"Cached: {_lastGeneratedBreps.Count} Breps");
-                    this.Message = "Cached";
-                }
-                return;
-            }
+            // Only start new generation on rising edge (button press)
+            // This section is now handled at the top of SolveInstance
+            // risingEdge check ensures we only trigger once per button press
 
             // Start new generation
             _isGenerating = true;
@@ -236,7 +225,7 @@ namespace src.GenerativeComps
             {
                 try
                 {
-                    await GenerateAndImportModelAsync(apiKey, prompt, outputDir, format, DA);
+                    await GenerateAndImportModelAsync(apiKey, prompt, outputDir, format, keepFile, DA);
                 }
                 catch (Exception ex)
                 {
@@ -259,7 +248,7 @@ namespace src.GenerativeComps
             ExpireSolution(true);
         }
 
-        private async Task GenerateAndImportModelAsync(string apiKey, string prompt, string outputDir, string format, IGH_DataAccess DA)
+        private async Task GenerateAndImportModelAsync(string apiKey, string prompt, string outputDir, string format, bool keepFile, IGH_DataAccess DA)
         {
             using var client = new System.Net.Http.HttpClient();
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
@@ -298,7 +287,7 @@ namespace src.GenerativeComps
 
             if (initialStatus == "completed")
             {
-                await ProcessCompletedModel(createResult.RootElement, format, outputDir, DA);
+                await ProcessCompletedModel(createResult.RootElement, format, outputDir, keepFile, DA);
                 return;
             }
             else if (initialStatus == "failed")
@@ -337,7 +326,7 @@ namespace src.GenerativeComps
                 if (status == "completed")
                 {
                     isComplete = true;
-                    await ProcessCompletedModel(getResult.RootElement, format, outputDir, DA);
+                    await ProcessCompletedModel(getResult.RootElement, format, outputDir, keepFile, DA);
                 }
                 else if (status == "failed")
                 {
@@ -355,7 +344,7 @@ namespace src.GenerativeComps
             }
         }
 
-        private async Task ProcessCompletedModel(JsonElement result, string format, string outputDir, IGH_DataAccess DA)
+        private async Task ProcessCompletedModel(JsonElement result, string format, string outputDir, bool keepFile, IGH_DataAccess DA)
         {
             // Step 3: Download the file
             _statusMessage = "Downloading file...";
@@ -452,8 +441,27 @@ namespace src.GenerativeComps
                 _isGenerating = false;
                 this.Message = _statusMessage;
 
-                // Move and rename file
-                MoveAndRenameFile(filePath, outputDir, format);
+                // Handle file cleanup based on keepFile setting
+                if (keepFile)
+                {
+                    // Move and rename file to MODELS folder
+                    MoveAndRenameFile(filePath, outputDir, format);
+                }
+                else
+                {
+                    // Delete the temporary file
+                    try
+                    {
+                        if (File.Exists(filePath))
+                        {
+                            File.Delete(filePath);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, $"Failed to delete temporary file: {ex.Message}");
+                    }
+                }
 
                 // Trigger one final solution to output the results
                 ExpireSolution(true);
